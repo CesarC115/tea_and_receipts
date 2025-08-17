@@ -20,33 +20,30 @@ if not ELEVENLABS_API_KEY:
 # Elevenlabs client
 client_elevenlabs = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
+MINECRAFT_VIDEO_PATH:Path = CWD / "minecraft_parkour_1_30-p1.mp4"
 
-# STORIES_PATH:Path = CWD
-STORY1_PATH:Path = CWD / "story1.txt"
-AUDIO_PATH:Path = CWD / "audio_development.mp3"
-VIDEO_PATH:Path = CWD / "minecraft_parkour_1_30-p1.mp4"
-OUTPUT_VIDEO:Path = CWD / "video_subtitled.mp4"
 
     
-def get_story() -> str:
+def get_story(text_path:Path) -> str:
     """Read the story text from a file."""
-    story: str = ""
+    story:str = ""
     
-    # Read from a text file the story
+    # Read the text file from text file
     try:
-        with open(STORY1_PATH, "r", encoding="utf-8") as file_text:
-            story = file_text.read()
+        with open(text_path, "r", encoding="utf-8") as file:
+            story = file.read()
     except FileNotFoundError:
-        print("story1.txt not found.")
+        print("story.txt not found")
     except Exception as e:
-        print(f"Error reading story1.txt: {e}")
+        print(f"Error reading story.txt: {e}")
     
     return story
 
-def synthesize_audio(text: str, output_path: Path) -> list:
+def synthesize_audio(text: str, audio_path: Path) -> list:
     """
     Use ElevenLabs TTS to synthesize `text` into an MP3 file.
-    Returns the duration of the generated audio in seconds.
+    Returns a list of dictionaries containing the letters with 
+    timestamps.
     """
         
     # Generate audio stream
@@ -64,12 +61,13 @@ def synthesize_audio(text: str, output_path: Path) -> list:
     
     # Save audio
     audio_bytes = base64.b64decode(response.audio_base_64)
+    output_path = output_path / 'audio.mp3'
     try:
-        with open(output_path, "wb") as file:
+        with open(audio_path, "wb") as file:
             file.write(audio_bytes)
     except Exception as e:
         print(f"Failed to write to file as audio:{e}")
-    print(f"Audio file saved:{output_path}")
+    print(f"Audio file saved:{audio_path}")
 
     # Extract timestamps
     timestamps = []
@@ -178,27 +176,44 @@ def add_audio_and_subtitles(video_path: Path, audio_path: Path, word_timestamps:
     final.write_videofile(str(output_path))
     
 
+def create_video_directory()-> Path:
+    # Get index 
+    video_id = int(os.getenv("NUM_VIDEOS", "1"))
+    
+    # Define videos directory
+    videos_dir:Path = CWD / "videos"
+    videos_dir.mkdir(exist_ok=True)
+    
+    # Create video Directory
+    video_name:str = str(f"video_{video_id}")
+    video_dir:Path = video_dir / video_name
+    video_dir.mkdir(exist_ok=True)
+    
+    print("Video Folder Created at:", video_dir)
+    return video_dir
+    
 def main():
     print("Starting app...")
-    print("CWD:", CWD)
-  
-    # Story in Text  
+    
+    video_dir:Path = create_video_directory()
+    TEXT_PATH = video_dir / 'text.txt'
+    AUDIO_PATH = video_dir / 'audio.mp3'
+    VIDEO_PATH = video_dir / 'video.mp4'
+   
     print("Getting story...")
-    story:str = get_story()
-    # print("Story:", story)
+    story:str = get_story(TEXT_PATH)
     
     # Text to Speech
     print("Synthetizing audio...") 
     audio_char_timestamps = synthesize_audio(story, AUDIO_PATH)
-    print(f"Audio generated at: {AUDIO_PATH}")
     
     # Calculate word duration
     words_timestamps = get_words_timestamps(audio_char_timestamps)
     
     print("Adding audio and subtitles to video...")
-    OUTPUT_VIDEO = CWD / "final_video.mp4"
-    add_audio_and_subtitles(VIDEO_PATH, AUDIO_PATH, words_timestamps, OUTPUT_VIDEO)
-    print("Video saved to ", OUTPUT_VIDEO)
+    add_audio_and_subtitles(MINECRAFT_VIDEO_PATH, AUDIO_PATH, words_timestamps, VIDEO_PATH)
+    
+    print("Video created at:", VIDEO_PATH)
     
 if __name__ == "__main__":
     print("Running main...")
