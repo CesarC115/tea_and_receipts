@@ -1,2 +1,6 @@
 venv
 venv/*
+data
+data/*
+videos
+videos/*
