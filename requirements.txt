@@ -2,3 +2,4 @@ python-dotenv
 moviepy
 undetected-chromedriver
 selenium-stealth
+pytest

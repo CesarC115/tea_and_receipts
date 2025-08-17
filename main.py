@@ -8,17 +8,19 @@ from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 from moviepy.video import fx as vfx, tools as videotools
 from pathlib import Path
 
+CWD = Path.cwd()
+
+
 # Load API keys
-load_dotenv()
+load_dotenv(dotenv_path=CWD)
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 if not ELEVENLABS_API_KEY:
-    raise RuntimeError("Set ELEVENLABS_API_KEY in .venv file")
+    raise RuntimeError("ELEVENLABS_API_KEY NOT FOUND")
 
 # Elevenlabs client
 client_elevenlabs = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
-# Paths
-CWD = Path.cwd()
+
 # STORIES_PATH:Path = CWD
 STORY1_PATH:Path = CWD / "story1.txt"
 AUDIO_PATH:Path = CWD / "audio_development.mp3"
@@ -199,4 +201,5 @@ def main():
     print("Video saved to ", OUTPUT_VIDEO)
     
 if __name__ == "__main__":
-    main()
+    print("Running main...")
+    # main()
